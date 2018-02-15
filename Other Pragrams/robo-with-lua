@@ -1,0 +1,58 @@
+wifi.setmode(wifi.STATION)
+wifi.sta.config("godfather_r1","9719277016")
+print(wifi.sta.getip())
+led1 = 0
+led2 = 1
+led3 = 2
+led4 = 3
+gpio.mode(led1, gpio.OUTPUT)
+gpio.mode(led2, gpio.OUTPUT)
+srv = net.createServer(net.TCP)
+srv:listen(80, function(conn)
+    conn:on("receive", function(sck, payload)
+        print(payload)
+        local buf = "";
+        local _, _, method, path, vars = string.find(payload, "([A-Z]+) (.+)?(.+) HTTP");
+        if(method == nil)then
+            _, _, method, path = string.find(payload, "([A-Z]+) (.+) HTTP");
+        end
+        local _GET = {}
+        if (vars ~= nil)then
+            for k, v in string.gmatch(vars, "(%w+)=(%w+)&*") do
+                _GET[k] = v
+            end
+        end
+        buf = buf.."<h1> ESP8266 Web Server</h1>";
+        buf = buf.."<p><a href=\"?pin=forward\"><button>forward</button></a>&nbsp;<a href=\"?pin=back\"><button>back</button></a></p>";
+        buf = buf.."<p><a href=\"?pin=left\"><button>left</button></a>&nbsp;<a href=\"?pin=right\"><button>right</button></a><br><a href=\"?pin=break\"><button>break</button></a></p>";
+        local _on,_off = "",""
+        if(_GET.pin == "forward")then
+            gpio.write(led1, gpio.HIGH);
+            gpio.write(led2, gpio.LOW);
+            gpio.write(led3, gpio.HIGH);
+            gpio.write(led4, gpio.LOW);
+        elseif(_GET.pin == "back")then
+            gpio.write(led1, gpio.LOW);
+            gpio.write(led2, gpio.HIGH);
+            gpio.write(led3, gpio.LOW);
+            gpio.write(led4, gpio.HIGH);
+        elseif(_GET.pin == "left")then
+            gpio.write(led1, gpio.HIGH);
+            gpio.write(led2, gpio.LOW);
+            gpio.write(led3, gpio.LOW);
+            gpio.write(led4, gpio.HIGH);
+        elseif(_GET.pin == "right")then
+            gpio.write(led1, gpio.LOW);
+            gpio.write(led2, gpio.HIGH);
+            gpio.write(led3, gpio.HIGH);
+            gpio.write(led4, gpio.LOW);
+        elseif(_GET.pin == "break")then
+            gpio.write(led1, gpio.LOW);
+            gpio.write(led2, gpio.LOW);
+            gpio.write(led3, gpio.LOW);
+            gpio.write(led4, gpio.LOW);
+        end
+        sck:send(buf);
+    end)
+    conn:on("sent", function(sck) sck:close() end)
+end)

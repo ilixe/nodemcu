@@ -1,0 +1,106 @@
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+
+const char *ssid = "godfather_r2";
+const char *pw = "9719277016";
+IPAddress ip(192, 168, 1, 2);
+IPAddress netmask(255, 255, 255, 0);
+const int port = 9877;
+
+const int motor1Pin = 5;    // H-bridge leg 2 (pin 7, 2A)
+const int motor2Pin = 4;    // H-bridge leg 1 (pin 2, 1A)
+const int motor3Pin = 0;    // H-bridge leg 2 (pin 7, 2A)
+const int motor4Pin = 2;    // H-bridge leg 1 (pin 2, 1A)
+
+
+//WiFiServer server(port);
+//WiFiClient client;
+
+
+void setup() {
+
+  
+
+  pinMode(motor1Pin, OUTPUT); 
+  pinMode(motor2Pin, OUTPUT);
+  pinMode(motor3Pin, OUTPUT); 
+  pinMode(motor4Pin, OUTPUT);
+  
+  Serial.begin(115200);
+
+  WiFi.softAPConfig(ip, ip, netmask);
+  WiFi.softAP(ssid, pw);
+
+  //server.begin();
+//client = server.available();
+
+  Serial.println("ESP8266 RC receiver 1.1 powered by RoboRemo");
+  Serial.println((String)"SSID: " + ssid + "  PASS: " + pw);
+  Serial.println((String)"RoboRemo app must connect to " + ip.toString() + ":" + port);
+  
+}
+
+
+void loop() {  
+
+if (Serial.available() > 0) {
+int result = Serial.read();
+
+Serial.println(result);
+if(result=='8')
+{
+digitalWrite(motor1Pin, HIGH); //forward
+digitalWrite(motor2Pin, LOW); 
+digitalWrite(motor3Pin, HIGH);
+digitalWrite(motor4Pin, LOW);  
+Serial.println("Forward"); // Prints out “Motor 1 Forward” on the serial monitor
+Serial.println("   "); // Creates a blank line printed on the serial monitor
+}
+else if(result=='2')
+{
+digitalWrite(motor1Pin, LOW); //backward
+digitalWrite(motor2Pin, HIGH);
+digitalWrite(motor3Pin, LOW); 
+digitalWrite(motor4Pin, HIGH);
+Serial.println("Reverse");
+Serial.println("   ");
+}
+else if(result=='4')
+{
+digitalWrite(motor1Pin, HIGH); //LEFT
+digitalWrite(motor2Pin, LOW); 
+digitalWrite(motor3Pin, LOW);
+digitalWrite(motor4Pin, HIGH); 
+Serial.println("left");
+Serial.println("   ");
+}
+else if(result=='6')
+{
+digitalWrite(motor1Pin, LOW); //RIGHT
+digitalWrite(motor2Pin, HIGH);
+digitalWrite(motor3Pin, HIGH);
+digitalWrite(motor4Pin, LOW);
+Serial.println("right");
+Serial.println("   ");
+}
+else if(result=='5')
+{
+digitalWrite(motor1Pin, LOW); 
+digitalWrite(motor2Pin, LOW);
+digitalWrite(motor3Pin, LOW); 
+digitalWrite(motor4Pin, LOW);
+Serial.println("Break");
+Serial.println("   ");
+}
+/*
+else{
+  // turn all the connections off if an unmapped key is pressed:
+for (int thisPin = 2; thisPin < 11; thisPin++) {
+digitalWrite(thisPin, LOW);
+}
+}
+*/
+  
+    
+  }
+}

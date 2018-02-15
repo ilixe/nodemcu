@@ -1,0 +1,144 @@
+#include <ESP8266WiFi.h>
+
+const char* ssid     = "godfather_r1";  
+const char* password = "9719277016";
+
+const char* host     = "192.168.1.104"; // Your domain  
+String path          = "/motor.json";  
+
+const int motor1Pin = 16;    // H-bridge leg 1 (pin 2, 1A)
+const int motor2Pin = 5;    // H-bridge leg 2 (pin 7, 2A)
+const int motor3Pin = 4;    // H-bridge leg 1 (pin 2, 1A)
+const int motor4Pin = 0;    // H-bridge leg 2 (pin 7, 2A)
+
+ WiFiClient client;
+  const int httpPort = 80;
+  
+void setup() {  
+  pinMode(motor1Pin, OUTPUT); 
+  pinMode(motor2Pin, OUTPUT); 
+  pinMode(motor3Pin, OUTPUT); 
+  pinMode(motor4Pin, OUTPUT); 
+  
+  Serial.begin(115200);
+
+  delay(10);
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+  int wifi_ctr = 0;
+  //while (WiFi.status() != WL_CONNECTED) {
+    //delay(2);
+    //Serial.print(".");
+  //}
+
+  Serial.println("WiFi connected");  
+  Serial.println("IP address: " + WiFi.localIP());
+ 
+}
+
+void loop() {  
+  //Serial.print("connecting to ");
+  //Serial.println(host);
+  //WiFiClient client;
+  //const int httpPort = 80;
+  //if (!
+  client.connect(host, httpPort);
+  //) {
+    //Serial.println("connection failed");
+    //return;
+  //}
+
+  client.print(String("GET ") + path + " HTTP/1.1\r\n" +
+               "Host: " + host + "\r\n" + 
+               "Connection: keep-alive\r\n\r\n");
+
+  delay(1); // wait for server to respond
+
+  // read response
+  String section="header";
+  while(client.available()){
+    String line = client.readStringUntil('\r');
+     //Serial.print(line);
+     
+     
+     // we’ll parse the HTML body here
+    if (section=="header") { // headers..
+      Serial.print(".");
+      if (line=="\n") { // skips the empty space at the beginning 
+        section="json";
+        
+      }
+    }
+    else if (section=="json") {  // print the good stuff
+      section="ignore";
+            String result = line.substring(1);
+Serial.println("-RESULT-");
+Serial.println(result);
+Serial.println("-RESULT-");
+      // Parse JSON
+      int size = result.length();
+      char json[size];
+      result.toCharArray(json, size);
+
+
+
+
+if(result=="8")
+{
+digitalWrite(motor1Pin, HIGH); //forward
+digitalWrite(motor2Pin, LOW); 
+digitalWrite(motor3Pin, HIGH);
+digitalWrite(motor4Pin, LOW); 
+Serial.println("Forward"); // Prints out “Motor 1 Forward” on the serial monitor
+Serial.println("   "); // Creates a blank line printed on the serial monitor
+}
+else if(result=="2")
+{
+digitalWrite(motor1Pin, LOW); //backward
+digitalWrite(motor2Pin, HIGH);
+digitalWrite(motor3Pin, LOW); 
+digitalWrite(motor4Pin, HIGH);
+Serial.println("Reverse");
+Serial.println("   ");
+}
+else if(result=="4")
+{
+digitalWrite(motor1Pin, LOW); //RIGHT
+digitalWrite(motor2Pin, HIGH);
+digitalWrite(motor3Pin, HIGH);
+digitalWrite(motor4Pin, LOW);
+Serial.println("right");
+Serial.println("   ");
+}
+else if(result=="6")
+{
+digitalWrite(motor1Pin, HIGH); //LEFT
+digitalWrite(motor2Pin, LOW); 
+digitalWrite(motor3Pin, LOW);
+digitalWrite(motor4Pin, HIGH); 
+Serial.println("left");
+Serial.println("   ");
+}
+else if(result=="5")
+{
+digitalWrite(motor1Pin, LOW); 
+digitalWrite(motor2Pin, LOW); 
+digitalWrite(motor3Pin, LOW); 
+digitalWrite(motor4Pin, LOW); 
+Serial.println("Break");
+Serial.println("   ");
+}
+else{
+  // turn all the connections off if an unmapped key is pressed:
+for (int thisPin = 2; thisPin < 11; thisPin++) {
+digitalWrite(thisPin, LOW);
+}
+  }
+
+  
+    
+  }
+}
+}
